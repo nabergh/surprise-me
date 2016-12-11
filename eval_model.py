@@ -8,13 +8,14 @@ import pickle
 
 from load_dataset import training_set_generator
 from load_dataset import num_recipes
+from load_dataset import max_recipe_length
 
 char2id = pickle.load(open('dataset/char2id.p', 'rb'))
 id2char = pickle.load(open('dataset/id2char.p', 'rb'))
 
 hiddenStateSize = 128
 hiddenLayerSize = 128
-max_recipe_length = 500
+max_sequence_length = max_sequence_length + 1
 
 print('Building Inference model...')
 inference_model = Sequential()
@@ -33,7 +34,7 @@ for i in range(0, 10):
     startChar[0, 0, char2id['S']] = 1
     end = False
     sent = ""
-    for i in range(0, max_recipe_length):
+    for i in range(0, max_sequence_length):
         nextCharProbs = inference_model.predict(startChar)
 
         nextCharProbs = np.asarray(nextCharProbs).astype('float64')

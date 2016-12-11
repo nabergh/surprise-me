@@ -8,20 +8,21 @@ import pickle
 
 from load_dataset import training_set_generator
 from load_dataset import num_recipes
+from load_dataset import max_recipe_length
 
 char2id = pickle.load(open('dataset/char2id.p', 'rb'))
 id2char = pickle.load(open('dataset/id2char.p', 'rb'))
 
 hiddenStateSize = 128
 hiddenLayerSize = 128
-max_recipe_length = 500
+max_sequence_length = max_recipe_length + 1
 
 print('Building training model...')
 hiddenStateSize = 128
 hiddenLayerSize = 128
 model = Sequential()
 
-model.add(LSTM(hiddenStateSize, return_sequences = True, input_shape=(max_recipe_length, len(char2id))))
+model.add(LSTM(hiddenStateSize, return_sequences = True, input_shape=(max_sequence_length, len(char2id))))
 model.add(TimeDistributed(Dense(hiddenLayerSize)))
 model.add(TimeDistributed(Activation('relu'))) 
 model.add(TimeDistributed(Dense(len(char2id))))
