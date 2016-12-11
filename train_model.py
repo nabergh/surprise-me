@@ -32,6 +32,6 @@ model.compile(loss='categorical_crossentropy', optimizer = RMSprop(lr=0.001))
 print(model.summary())
 
 num_epochs = 10
-model.fit_generator(training_set_generator, num_recipes, num_epochs, verbose=1)
+model.fit_generator(training_set_generator(num_epochs), num_recipes, num_epochs, verbose=1)
 
 model.save_weights('cocktail_weights.h5')
