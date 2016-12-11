@@ -8,6 +8,13 @@ id2char = pickle.load(open('dataset/id2char.p', 'rb'))
 max_recipe_length = 500
 num_recipes = 30724
 
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+        
 def booze_permuter(recipes):
     for rec in recipes:
         ings = rec['ingredients']
