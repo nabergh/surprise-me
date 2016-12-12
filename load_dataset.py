@@ -40,10 +40,10 @@ def training_set_generator(num_recipes):
             recipe_list.append(next(recipe_generator))
             
         maxSequenceLength = max_recipe_length + 1
-        inputChars = np.zeros((len(recipe_list), maxSequenceLength, len(char2id)), dtype=np.bool)
-        nextChars = np.zeros((len(recipe_list), maxSequenceLength, len(char2id)), dtype=np.bool)
+        inputChars = np.zeros((num_recipes, maxSequenceLength, len(char2id)), dtype=np.bool)
+        nextChars = np.zeros((num_recipes, maxSequenceLength, len(char2id)), dtype=np.bool)
 
-        for i in range(0, len(recipe_list)):
+        for i in range(0, num_recipes):
             inputChars[i, 0, char2id['S']] = 1
             nextChars[i, 0, char2id[recipe_list[i][0]]] = 1
             for j in range(1, maxSequenceLength):

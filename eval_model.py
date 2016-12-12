@@ -15,7 +15,7 @@ id2char = pickle.load(open('dataset/id2char.p', 'rb'))
 
 hiddenStateSize = 128
 hiddenLayerSize = 128
-max_sequence_length = max_sequence_length + 1
+max_sequence_length = max_recipe_length + 1
 
 print('Building Inference model...')
 inference_model = Sequential()
@@ -26,8 +26,7 @@ inference_model.add(Dense(len(char2id)))
 inference_model.add(Activation('softmax'))
 
 inference_model.load_weights('cocktail_weights.h5')
-
-for i in range(0, 10):
+for i in range(0, 100):
     inference_model.reset_states()
 
     startChar = np.zeros((1, 1, len(char2id)))
