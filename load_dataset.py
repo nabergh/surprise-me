@@ -16,43 +16,41 @@ def is_number(s):
         return False
         
 def booze_permuter(recipes):
-    for rec in recipes:
-        ings = rec['ingredients']
-        i = 0
-        while i < len(ings) and is_number(ings[i][0]):
-            i += 1
+    while True:
+        for rec in recipes:
+            ings = rec['ingredients']
+            i = 0
+            while i < len(ings) and is_number(ings[i][0]):
+                i += 1
+
+            ing_list = ings[:i]
+            garn_list = ings[i:]
+
+            random.shuffle(ing_list)
+            random.shuffle(garn_list)
+
+            ing_list.extend(garn_list)
+            yield '\n'.join(ing_list)
+        
+def training_set_generator(num_recipes):
+    recipe_generator = booze_permuter(all_recipes)
+    while True:
+        recipe_list = []
+        while len(recipe_list) < num_recipes:
+            recipe_list.append(next(recipe_generator))
             
-        ing_list = ings[:i]
-        garn_list = ings[i:]
-        
-        random.shuffle(ing_list)
-        random.shuffle(garn_list)
-        
-        ing_list.extend(garn_list)
-        yield '\n'.join(ing_list)
-        
-def get_permuted_recipes():
-    recipe_list = []
-    for recipe in booze_permuter(all_recipes):
-        recipe_list.append(recipe)
-    return recipe_list
-
-def training_set_generator(num_sets):
-    for i in range(num_sets):
-        training_set = get_permuted_recipes()
-
         maxSequenceLength = max_recipe_length + 1
-        inputChars = np.zeros((len(training_set), maxSequenceLength, len(char2id)), dtype=np.bool)
-        nextChars = np.zeros((len(training_set), maxSequenceLength, len(char2id)), dtype=np.bool)
+        inputChars = np.zeros((len(recipe_list), maxSequenceLength, len(char2id)), dtype=np.bool)
+        nextChars = np.zeros((len(recipe_list), maxSequenceLength, len(char2id)), dtype=np.bool)
 
-        for i in range(0, len(training_set)):
+        for i in range(0, len(recipe_list)):
             inputChars[i, 0, char2id['S']] = 1
-            nextChars[i, 0, char2id[training_set[i][0]]] = 1
+            nextChars[i, 0, char2id[recipe_list[i][0]]] = 1
             for j in range(1, maxSequenceLength):
-                if j < len(training_set[i]) + 1:
-                    inputChars[i, j, char2id[training_set[i][j - 1]]] = 1
-                    if j < len(training_set[i]):
-                        nextChars[i, j, char2id[training_set[i][j]]] = 1
+                if j < len(recipe_list[i]) + 1:
+                    inputChars[i, j, char2id[recipe_list[i][j - 1]]] = 1
+                    if j < len(recipe_list[i]):
+                        nextChars[i, j, char2id[recipe_list[i][j]]] = 1
                     else:
                         nextChars[i, j, char2id['E']] = 1
                 else:
