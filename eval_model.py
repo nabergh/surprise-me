@@ -26,7 +26,7 @@ inference_model.add(Dense(len(char2id)))
 inference_model.add(Activation('softmax'))
 
 inference_model.load_weights('cocktail_weights.h5')
-for i in range(0, 100):
+for i in range(0, 20):
     inference_model.reset_states()
 
     startChar = np.zeros((1, 1, len(char2id)))
