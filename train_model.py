@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense, Activation, LSTM
-from keras.optimizers import Adam
+from keras.optimizers import Nadam
 from keras.layers.wrappers import TimeDistributed
 from keras import callbacks
 import pickle
@@ -28,15 +28,16 @@ model.add(TimeDistributed(Dense(hiddenLayerSize)))
 model.add(TimeDistributed(Activation('relu'))) 
 model.add(TimeDistributed(Dense(len(char2id))))
 model.add(TimeDistributed(Activation('softmax')))
-model.compile(loss='categorical_crossentropy', optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.99, epsilon=1e-08, decay=0.0))
+model.compile(loss='categorical_crossentropy', optimizer = Nadam(lr=0.002, beta_1=0.9, beta_2=0.99, epsilon=1e-08, schedule_decay=0.004))
 
 print(model.summary())
 
 cb = []
-cb.append(callbacks.TensorBoard(log_dir='./logs', histogram_freq=5, write_graph=True, write_images=False))
+cb.append(callbacks.TensorBoard(log_dir='./logs', histogram_freq=1, write_graph=False, write_images=False))
 
-num_epochs = 1000
+num_epochs = 10
 batch_size = 128 
 with tf.device('/gpu:0'):
-	model.fit_generator(training_set_generator(batch_size), int(num_recipes / batch_size), num_epochs, verbose=1, callbacks=cb)
+	hist = model.fit_generator(training_set_generator(batch_size), num_recipes, num_epochs, verbose=1, callbacks=cb)
 model.save_weights('cocktail_weights.h5')
+print(str(hist))
