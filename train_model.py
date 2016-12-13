@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense, Activation, LSTM
-from keras.optimizers import RMSprop
+from keras.optimizers import Adam
 from keras.layers.wrappers import TimeDistributed
 from keras import callbacks
 import pickle
@@ -28,12 +28,12 @@ model.add(TimeDistributed(Dense(hiddenLayerSize)))
 model.add(TimeDistributed(Activation('relu'))) 
 model.add(TimeDistributed(Dense(len(char2id))))
 model.add(TimeDistributed(Activation('softmax')))
-model.compile(loss='categorical_crossentropy', optimizer = RMSprop(lr=0.001))
+model.compile(loss='categorical_crossentropy', optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.99, epsilon=1e-08, decay=0.0))
 
 print(model.summary())
 
 cb = []
-cb.append(keras.callbacks.TensorBoard(log_dir='./logs', histogram_freq=5, write_graph=True, write_images=False))
+cb.append(callbacks.TensorBoard(log_dir='./logs', histogram_freq=5, write_graph=True, write_images=False))
 
 num_epochs = 1000
 batch_size = 128 
