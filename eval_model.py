@@ -1,7 +1,8 @@
 import tensorflow as tf
 import numpy as np
 from keras.models import Sequential
-from keras.layers import Dense, Activation, LSTM
+from keras.layers import Dense, Activation, LSTM, GRU
+from keras.layers.core import Reshape
 from keras.optimizers import RMSprop
 from keras.layers.wrappers import TimeDistributed
 import pickle
@@ -14,19 +15,28 @@ char2id = pickle.load(open('dataset/char2id.p', 'rb'))
 id2char = pickle.load(open('dataset/id2char.p', 'rb'))
 
 hiddenStateSize = 128
-hiddenLayerSize = 128
+hiddenLayerSize = 256
+hiddenLayerSize2 = 256
 max_sequence_length = max_recipe_length + 1
 
 print('Building Inference model...')
+
+
 inference_model = Sequential()
-inference_model.add(LSTM(hiddenStateSize, batch_input_shape=(1, 1, len(char2id)), stateful = True))
+inference_model.add(GRU(hiddenStateSize, batch_input_shape=(1, 1, len(char2id)), stateful = True))
 inference_model.add(Dense(hiddenLayerSize))
+inference_model.add(Activation('relu'))
+inference_model.add(Reshape((1, hiddenLayerSize)))
+inference_model.add(GRU(hiddenLayerSize, batch_input_shape=(1,1,hiddenLayerSize), stateful = True))
+inference_model.add(Dense(hiddenLayerSize2))
 inference_model.add(Activation('relu'))
 inference_model.add(Dense(len(char2id)))
 inference_model.add(Activation('softmax'))
 
+
+
 inference_model.load_weights('cocktail_weights.h5')
-for i in range(0, 100):
+for i in range(0, 20):
     inference_model.reset_states()
 
     startChar = np.zeros((1, 1, len(char2id)))
