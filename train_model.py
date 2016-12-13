@@ -4,6 +4,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Activation, LSTM
 from keras.optimizers import RMSprop
 from keras.layers.wrappers import TimeDistributed
+from keras import callbacks
 import pickle
 
 from load_dataset import training_set_generator
@@ -31,8 +32,11 @@ model.compile(loss='categorical_crossentropy', optimizer = RMSprop(lr=0.001))
 
 print(model.summary())
 
+cb = []
+cb.append(keras.callbacks.TensorBoard(log_dir='./logs', histogram_freq=5, write_graph=True, write_images=False))
+
 num_epochs = 1000
 batch_size = 128 
 with tf.device('/gpu:0'):
-	model.fit_generator(training_set_generator(batch_size), int(num_recipes / batch_size), num_epochs, verbose=1)
+	model.fit_generator(training_set_generator(batch_size), int(num_recipes / batch_size), num_epochs, verbose=1, callbacks=cb)
 model.save_weights('cocktail_weights.h5')
