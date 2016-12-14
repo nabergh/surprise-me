@@ -97,7 +97,10 @@ def name_training_set_generator(num_recipes):
 
         for i in range(0, num_recipes):
             recipeChars[i, 0, char2id['S']] = 1
-            nextNameChars[i, 0, char2id[name_list[i][0]]] = 1
+            if name_list[i][0] not in char2id:
+                nextNameChars[i, 0, char2id[' ']] = 1
+            else:
+                nextNameChars[i, 0, char2id[name_list[i][0]]] = 1
             for j in range(1, maxSequenceLength):
                 if j < len(recipe_list[i]) + 1:
                     recipeChars[i, j, char2id[recipe_list[i][j - 1]]] = 1

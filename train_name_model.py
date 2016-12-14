@@ -1,16 +1,16 @@
 import tensorflow as tf
 import numpy as np
 from keras.models import Sequential
-from keras.layers import Dense, Activation, LSTM, GRU
+from keras.layers import Dense, Merge, RepeatVector, Activation, LSTM, GRU
 from keras.optimizers import Nadam
 from keras.layers.wrappers import TimeDistributed
 from keras import callbacks
 import pickle
 
-from load_dataset import training_set_generator
+from load_dataset import name_training_set_generator
 from load_dataset import num_recipes
 from load_dataset import max_recipe_length
-from load_dataset import max_rname_length
+from load_dataset import max_name_length
 
 char2id = pickle.load(open('dataset/char2id.p', 'rb'))
 id2char = pickle.load(open('dataset/id2char.p', 'rb'))
@@ -28,12 +28,13 @@ hiddenLayerSize = 128
 recipe_node = Sequential()
 
 recipe_node.add(GRU(hiddenStateSize, input_shape=(max_sequence_length, len(char2id))))
-recipe_node.add(TimeDistributed(Dense(hiddenStateSize3)))
-recipe_node.add(TimeDistributed(Activation('relu')))
+recipe_node.add(Dense(hiddenStateSize3))
+recipe_node.add(Activation('relu'))
+recipe_node.add(RepeatVector(max_name_sequence_length))
 
 title_node = Sequential()
 
-title_node.add(GRU(hiddenStateSize2, return_sequences = True, input_shape=(max_name_sequence_length, len(char2id)))
+title_node.add(GRU(hiddenStateSize2, return_sequences = True, input_shape=(max_name_sequence_length, len(char2id))))
 title_node.add(TimeDistributed(Dense(hiddenStateSize3)))
 title_node.add(TimeDistributed(Activation('relu')))
 
@@ -57,11 +58,11 @@ cb.append(callbacks.ReduceLROnPlateau(monitor='loss', factor=0.5, patience = 3, 
 cb.append(callbacks.EarlyStopping(monitor='loss', min_delta=0.0001, patience = 3, mode='min'))
 
 
-num_epochs = 10
+num_epochs = 3
 batch_size = 128
 samp_per_epoch = 30848 # multiple of 128 closest to num_recipes
 #with tf.device('/gpu:0'):
-hist = model.fit_generator(training_set_generator(batch_size), samp_per_epoch, num_epochs, verbose=1, callbacks=cb)
-model.save_weights('cocktail_weights.h5')
+hist = model.fit_generator(name_training_set_generator(batch_size), samp_per_epoch, num_epochs, verbose=1, callbacks=cb)
+model.save_weights('cocktail_name_weights.h5')
 pickle.dump(str(hist.history), open('loss_history.p', 'wb'))
 print(hist.history)
