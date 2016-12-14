@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from keras.models import Sequential
-from keras.layers import Dense, Merge, RepeatVector, Activation, LSTM, GRU
+from keras.layers import Dense, Activation, LSTM, GRU
 from keras.optimizers import Nadam
 from keras.layers.wrappers import TimeDistributed
 from keras import callbacks
@@ -17,22 +17,18 @@ id2char = pickle.load(open('dataset/id2char.p', 'rb'))
 max_sequence_length = max_recipe_length + 1
 
 print('Building training model...')
-hiddenStateSize = 256
-hiddenLayerSize = 256
-
-num_l1_cells = 4
-l1_cell_size = 32
-layer1 = []
-for i in range(num_l1_cells):
-	rnn_cell = Sequential()
-	rnn_cell.add(GRU(l1_cell_size, return_sequences = True, input_shape = (max_sequence_length, len(char2id))))
-	layer1.append(rnn_cell)
+hiddenStateSize = 128
+hiddenLayerSize = 256 
+hiddenLayerSize2 = 256
 
 model = Sequential()
-#model.add(TimeDistributed(RepeatVector(num_l1_cells), input_shape = (max_sequence_length, len(char2id))))
-model.add(Merge(layer1, mode='concat'))
-model.add(GRU(hiddenStateSize, return_sequences = True))
+
+model.add(GRU(hiddenStateSize, return_sequences = True, input_shape=(max_sequence_length, len(char2id))))
 model.add(TimeDistributed(Dense(hiddenLayerSize)))
+model.add(TimeDistributed(Activation('relu')))
+
+model.add(GRU(hiddenLayerSize, return_sequences = True, input_shape=(max_sequence_length, len(char2id))))
+model.add(TimeDistributed(Dense(hiddenLayerSize2)))
 model.add(TimeDistributed(Activation('relu')))
 
 model.add(TimeDistributed(Dense(len(char2id))))  # Add another dense layer with the desired output size.
