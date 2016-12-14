@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from keras.models import Sequential
-from keras.layers import Dense, Activation, LSTM, GRU
+from keras.layers import Dense, Merge, Activation, LSTM, GRU
 from keras.layers.core import Reshape
 from keras.optimizers import RMSprop
 from keras.layers.wrappers import TimeDistributed
@@ -14,25 +14,31 @@ from load_dataset import max_recipe_length
 char2id = pickle.load(open('dataset/char2id.p', 'rb'))
 id2char = pickle.load(open('dataset/id2char.p', 'rb'))
 
-hiddenStateSize = 128
-hiddenLayerSize = 256
-hiddenLayerSize2 = 256
 max_sequence_length = max_recipe_length + 1
 
 print('Building Inference model...')
 
 
+hiddenStateSize = 256
+hiddenLayerSize = 256
+
+num_l1_cells = 4
+l1_cell_size = 32
+layer1 = []
+for i in range(num_l1_cells):
+        rnn_cell = Sequential()
+        rnn_cell.add(GRU(l1_cell_size, batch_input_shape = (1, 1, len(char2id)), stateful = True))
+        layer1.append(rnn_cell)
 inference_model = Sequential()
-inference_model.add(GRU(hiddenStateSize, batch_input_shape=(1, 1, len(char2id)), stateful = True))
+inference_model.add(Merge(layer1, mode='concat'))
+inference_model.add(Reshape((1, num_l1_cells * l1_cell_size)))
+inference_model.add(GRU(hiddenStateSize, batch_input_shape = (1, num_l1_cells * l1_cell_size), stateful = True))
 inference_model.add(Dense(hiddenLayerSize))
 inference_model.add(Activation('relu'))
-inference_model.add(Reshape((1, hiddenLayerSize)))
-inference_model.add(GRU(hiddenLayerSize, batch_input_shape=(1,1,hiddenLayerSize), stateful = True))
-inference_model.add(Dense(hiddenLayerSize2))
-inference_model.add(Activation('relu'))
-inference_model.add(Dense(len(char2id)))
-inference_model.add(Activation('softmax'))
 
+inference_model.add(Dense(len(char2id)))  # Add another dense layer with the desired output size.
+inference_model.add(Activation('softmax'))
+print(inference_model.summary())
 
 
 inference_model.load_weights('cocktail_weights.h5')
@@ -44,7 +50,7 @@ for i in range(0, 20):
     end = False
     sent = ""
     for i in range(0, max_sequence_length):
-        nextCharProbs = inference_model.predict(startChar)
+        nextCharProbs = inference_model.predict([startChar for i in range(num_l1_cells)])
 
         nextCharProbs = np.asarray(nextCharProbs).astype('float64')
         nextCharProbs = nextCharProbs / nextCharProbs.sum()

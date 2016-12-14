@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from keras.models import Sequential
-from keras.layers import Dense, Merge, Repeat, Activation, LSTM, GRU
+from keras.layers import Dense, Merge, RepeatVector, Activation, LSTM, GRU
 from keras.optimizers import Nadam
 from keras.layers.wrappers import TimeDistributed
 from keras import callbacks
@@ -20,18 +20,17 @@ print('Building training model...')
 hiddenStateSize = 256
 hiddenLayerSize = 256
 
-num_l1_cells = 32
-l1_cell_size = 16
+num_l1_cells = 4
+l1_cell_size = 32
 layer1 = []
-for i in range(num_1l_cells):
+for i in range(num_l1_cells):
 	rnn_cell = Sequential()
 	rnn_cell.add(GRU(l1_cell_size, return_sequences = True, input_shape = (max_sequence_length, len(char2id))))
-	rnn_cell.add(TimeDistributed(Activation('relu')))
 	layer1.append(rnn_cell)
 
 model = Sequential()
-model.add(TimeDistributed(RepeatVector(num_1l_cells)))
-model.add(TimeDistributed(Merge(layer1, mode='concat')))
+#model.add(TimeDistributed(RepeatVector(num_l1_cells), input_shape = (max_sequence_length, len(char2id))))
+model.add(Merge(layer1, mode='concat'))
 model.add(GRU(hiddenStateSize, return_sequences = True))
 model.add(TimeDistributed(Dense(hiddenLayerSize)))
 model.add(TimeDistributed(Activation('relu')))
@@ -48,7 +47,7 @@ cb.append(callbacks.TensorBoard(log_dir='./logs', histogram_freq=1, write_graph=
 num_epochs = 10
 batch_size = 128
 samp_per_epoch = 30848 # multiple of 128 closest to num_recipes
-with tf.device('/gpu:0'):
-	hist = model.fit_generator(training_set_generator(batch_size), samp_per_epoch, num_epochs, verbose=1, callbacks=cb)
+#with tf.device('/gpu:0'):
+hist = model.fit_generator(training_set_generator(batch_size), samp_per_epoch, num_epochs, verbose=1, callbacks=cb)
 model.save_weights('cocktail_weights.h5')
 print(hist.history)
