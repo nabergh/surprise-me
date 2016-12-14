@@ -23,18 +23,25 @@ hiddenStateSize2 = 256
 hiddenStateSize3 = 128
 hiddenLayerSize = 128
 
-inference_model = Sequential()
-inference_model.add(GRU(hiddenStateSize, batch_input_shape=(1, 1, len(char2id)), stateful = True))
-inference_model.add(Dense(hiddenStateSize2))
-inference_model.add(Activation('relu'))
+recipe_node = Sequential()
 
-inference_model.add(Reshape((1, hiddenStateSize2)))
-inference_model.add(GRU(hiddenStateSize2, batch_input_shape=(1,1,hiddenStateSize2), stateful = True))
-inference_model.add(Dense(hiddenStateSize3))
-inference_model.add(Activation('relu'))
+recipe_node.add(GRU(hiddenStateSize, batch_input_shape=(max_sequence_length, len(char2id))))
+recipe_node.add(Dense(hiddenStateSize3))
+recipe_node.add(Activation('relu'))
+
+title_node = Sequential()
+
+title_node.add(GRU(hiddenStateSize2, input_shape=(1, 1, len(char2id)), stateful = True)
+title_node.add(Dense(hiddenStateSize3)))
+title_node.add(Activation('relu'))
+
+
+inference_model = Sequential()
+inference_model.add(Merge([recipe_node, title_node], mode='concat', concat_axis=-1))
 
 inference_model.add(Reshape((1, hiddenStateSize3)))
-inference_model.add(GRU(hiddenStateSize3, batch_input_shape=(1,1,hiddenStateSize3), stateful = True))
+
+inference_model.add(GRU(hiddenStateSize3, stateful = True))
 inference_model.add(Dense(hiddenLayerSize))
 inference_model.add(Activation('relu'))
 
@@ -45,15 +52,31 @@ print(inference_model.summary())
 
 
 inference_model.load_weights('cocktail_weights.h5')
-for i in range(0, 20):
-    inference_model.reset_states()
+num_samples = 20
+gen = name_training_set_generator(num_samples)
 
+def printEmbedding(recipe):
+    charIds = np.zeros(recipe.shape[0])
+    for (idx, elem) in enumerate(recipe):
+        charIds[idx] = np.nonzero(elem)[0].squeeze()
+    print(''.join([id2char[x] for x in charIds]))
+
+
+for i in range(0, num_samples):
+    inference_model.reset_states()
+    inputs, realName = gen(next)
+    print("Real recipe:")
+    printEmbedding(inputs[0])
+    print("Real title:")
+    printEmbedding(inputs[1])
+    print("Generated titled:")
+    
     startChar = np.zeros((1, 1, len(char2id)))
     startChar[0, 0, char2id['S']] = 1
     end = False
     sent = ""
     for i in range(0, max_sequence_length):
-        nextCharProbs = inference_model.predict(startChar)
+        nextCharProbs = inference_model.predict([inputs[0], startChar])
 
         nextCharProbs = np.asarray(nextCharProbs).astype('float64')
         nextCharProbs = nextCharProbs / nextCharProbs.sum()
