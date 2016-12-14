@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from keras.models import Sequential
-from keras.layers import Dense, Activation, LSTM, GRU
+from keras.layers import Dense, Merge, Activation, LSTM, GRU
 from keras.layers.core import Reshape
 from keras.optimizers import RMSprop
 from keras.layers.wrappers import TimeDistributed
@@ -14,25 +14,34 @@ from load_dataset import max_recipe_length
 char2id = pickle.load(open('dataset/char2id.p', 'rb'))
 id2char = pickle.load(open('dataset/id2char.p', 'rb'))
 
-hiddenStateSize = 128
-hiddenLayerSize = 256
-hiddenLayerSize2 = 256
 max_sequence_length = max_recipe_length + 1
 
 print('Building Inference model...')
 
+hiddenStateSize = 512
+hiddenStateSize2 = 256
+hiddenStateSize3 = 128
+hiddenLayerSize = 128
 
 inference_model = Sequential()
 inference_model.add(GRU(hiddenStateSize, batch_input_shape=(1, 1, len(char2id)), stateful = True))
+inference_model.add(Dense(hiddenStateSize2))
+inference_model.add(Activation('relu'))
+
+inference_model.add(Reshape((1, hiddenStateSize2)))
+inference_model.add(GRU(hiddenStateSize2, batch_input_shape=(1,1,hiddenStateSize2), stateful = True))
+inference_model.add(Dense(hiddenStateSize3))
+inference_model.add(Activation('relu'))
+
+inference_model.add(Reshape((1, hiddenStateSize3)))
+inference_model.add(GRU(hiddenStateSize3, batch_input_shape=(1,1,hiddenStateSize3), stateful = True))
 inference_model.add(Dense(hiddenLayerSize))
 inference_model.add(Activation('relu'))
-inference_model.add(Reshape((1, hiddenLayerSize)))
-inference_model.add(GRU(hiddenLayerSize, batch_input_shape=(1,1,hiddenLayerSize), stateful = True))
-inference_model.add(Dense(hiddenLayerSize2))
-inference_model.add(Activation('relu'))
+
 inference_model.add(Dense(len(char2id)))
 inference_model.add(Activation('softmax'))
 
+print(inference_model.summary())
 
 
 inference_model.load_weights('cocktail_weights.h5')
