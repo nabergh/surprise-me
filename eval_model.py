@@ -18,20 +18,29 @@ max_sequence_length = max_recipe_length + 1
 
 print('Building Inference model...')
 
-
-hiddenStateSize = 256
-hiddenLayerSize = 256
+hiddenStateSize = 512
+hiddenStateSize2 = 256
+hiddenStateSize3 = 128
+hiddenLayerSize = 128
 
 inference_model = Sequential()
 inference_model.add(GRU(hiddenStateSize, batch_input_shape=(1, 1, len(char2id)), stateful = True))
+inference_model.add(Dense(hiddenStateSize2))
+inference_model.add(Activation('relu'))
+
+inference_model.add(Reshape((1, hiddenStateSize2)))
+inference_model.add(GRU(hiddenStateSize2, batch_input_shape=(1,1,hiddenStateSize2), stateful = True))
+inference_model.add(Dense(hiddenStateSize3))
+inference_model.add(Activation('relu'))
+
+inference_model.add(Reshape((1, hiddenStateSize3)))
+inference_model.add(GRU(hiddenStateSize3, batch_input_shape=(1,1,hiddenStateSize3), stateful = True))
 inference_model.add(Dense(hiddenLayerSize))
 inference_model.add(Activation('relu'))
-inference_model.add(Reshape((1, hiddenLayerSize)))
-inference_model.add(GRU(hiddenLayerSize, batch_input_shape=(1,1,hiddenLayerSize), stateful = True))
-inference_model.add(Dense(hiddenLayerSize2))
-inference_model.add(Activation('relu'))
+
 inference_model.add(Dense(len(char2id)))
 inference_model.add(Activation('softmax'))
+
 print(inference_model.summary())
 
 
@@ -44,7 +53,7 @@ for i in range(0, 20):
     end = False
     sent = ""
     for i in range(0, max_sequence_length):
-        nextCharProbs = inference_model.predict([startChar for i in range(num_l1_cells)])
+        nextCharProbs = inference_model.predict(startChar)
 
         nextCharProbs = np.asarray(nextCharProbs).astype('float64')
         nextCharProbs = nextCharProbs / nextCharProbs.sum()
