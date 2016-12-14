@@ -89,25 +89,37 @@ def name_training_set_generator(num_recipes):
             name_list.append(example[1])
             
         maxSequenceLength = max_recipe_length + 1
-        maxNameSequenceLength = maxSequenceLength
+        maxNameSequenceLength = max_name_length + 1
 
-        inputChars = np.zeros((num_recipes, maxSequenceLength, len(char2id)), dtype=np.bool)
-        nameChars = np.zeros((num_recipes, maxNameSequenceLength, len(char2id)), dtype=np.bool)
+        recipeChars = np.zeros((num_recipes, maxSequenceLength, len(char2id)), dtype=np.bool)
+        inNameChars = np.zeros((num_recipes, maxNameSequenceLength, len(char2id)), dtype=np.bool)
+        nextNameChars = np.zeros((num_recipes, maxNameSequenceLength, len(char2id)), dtype=np.bool)
 
         for i in range(0, num_recipes):
-            inputChars[i, 0, char2id['S']] = 1
+            recipeChars[i, 0, char2id['S']] = 1
+            nextNameChars[i, 0, char2id[name_list[i][0]]] = 1
             for j in range(1, maxSequenceLength):
                 if j < len(recipe_list[i]) + 1:
-                    inputChars[i, j, char2id[recipe_list[i][j - 1]]] = 1
+                    recipeChars[i, j, char2id[recipe_list[i][j - 1]]] = 1
                 else:
-                    inputChars[i, j, char2id['E']] = 1
-            nameChars[i, 0, char2id['S']] = 1
+                    recipeChars[i, j, char2id['E']] = 1
+            inNameChars[i, 0, char2id['S']] = 1
             for j in range(1, maxNameSequenceLength):
-                if j < len(name_list[i]) + 1:
+                if j <= len(name_list[i]):
                     if name_list[i][j - 1] not in char2id:
-                        nameChars[i, j, char2id[' ']] = 1
+                        inNameChars[i, j, char2id[' ']] = 1
                     else:
-                        nameChars[i, j, char2id[name_list[i][j - 1]]] = 1
+                        inNameChars[i, j, char2id[name_list[i][j - 1]]] = 1
+                        
+                    if j < len(name_list[i]):
+                        if name_list[i][j] not in char2id:
+                            nextNameChars[i, j, char2id[' ']] = 1
+                        else:
+                            nextNameChars[i, j, char2id[name_list[i][j]]] = 1
+                    else:
+                        nextNameChars[i, j, char2id['E']] = 1
+                        
                 else:
-                    nameChars[i, j, char2id['E']] = 1
-        yield (inputChars, nameChars)
+                    inNameChars[i, j, char2id['E']] = 1
+                    nextNameChars[i, j, char2id['E']] = 1
+        yield ([recipeChars, inNameChars], nextNameChars)
