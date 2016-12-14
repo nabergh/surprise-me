@@ -22,21 +22,15 @@ print('Building Inference model...')
 hiddenStateSize = 256
 hiddenLayerSize = 256
 
-num_l1_cells = 4
-l1_cell_size = 32
-layer1 = []
-for i in range(num_l1_cells):
-        rnn_cell = Sequential()
-        rnn_cell.add(GRU(l1_cell_size, batch_input_shape = (1, 1, len(char2id)), stateful = True))
-        layer1.append(rnn_cell)
 inference_model = Sequential()
-inference_model.add(Merge(layer1, mode='concat'))
-inference_model.add(Reshape((1, num_l1_cells * l1_cell_size)))
-inference_model.add(GRU(hiddenStateSize, batch_input_shape = (1, num_l1_cells * l1_cell_size), stateful = True))
+inference_model.add(GRU(hiddenStateSize, batch_input_shape=(1, 1, len(char2id)), stateful = True))
 inference_model.add(Dense(hiddenLayerSize))
 inference_model.add(Activation('relu'))
-
-inference_model.add(Dense(len(char2id)))  # Add another dense layer with the desired output size.
+inference_model.add(Reshape((1, hiddenLayerSize)))
+inference_model.add(GRU(hiddenLayerSize, batch_input_shape=(1,1,hiddenLayerSize), stateful = True))
+inference_model.add(Dense(hiddenLayerSize2))
+inference_model.add(Activation('relu'))
+inference_model.add(Dense(len(char2id)))
 inference_model.add(Activation('softmax'))
 print(inference_model.summary())
 

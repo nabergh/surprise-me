@@ -57,4 +57,4 @@ def training_set_generator(num_recipes):
                     inputChars[i, j, char2id['E']] = 1
                     nextChars[i, j, char2id['E']] = 1
         
-        yield ([inputChars for i in range(4)], nextChars)
+        yield (inputChars, nextChars)
