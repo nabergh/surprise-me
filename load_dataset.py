@@ -126,3 +126,19 @@ def name_training_set_generator(num_recipes):
                     inNameChars[i, j, char2id['E']] = 1
                     nextNameChars[i, j, char2id['E']] = 1
         yield ([recipeChars, inNameChars], nextNameChars)
+
+def eval_name_generator():
+    recipe_list = pickle.load(open('generated_recipes.p', 'rb'))
+    maxSequenceLength = max_recipe_length + 1
+    inputChars = np.zeros((num_recipes, maxSequenceLength, len(char2id)), dtype=np.bool)
+
+    for i in range(0, len(recipe_list)):
+        inputChars[i, 0, char2id['S']] = 1
+        for j in range(1, maxSequenceLength):
+            if j < len(recipe_list[i]) + 1:
+                inputChars[i, j, char2id[recipe_list[i][j - 1]]] = 1
+            else:
+                inputChars[i, j, char2id['E']] = 1
+
+    yield inputChars
+

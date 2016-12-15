@@ -58,7 +58,7 @@ cb.append(callbacks.ReduceLROnPlateau(monitor='loss', factor=0.5, patience = 3, 
 cb.append(callbacks.EarlyStopping(monitor='loss', min_delta=0.0001, patience = 3, mode='min'))
 
 
-num_epochs = 5
+num_epochs = 3
 batch_size = 128
 samp_per_epoch = 30848 # multiple of 128 closest to num_recipes
 #with tf.device('/gpu:0'):

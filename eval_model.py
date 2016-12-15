@@ -45,7 +45,8 @@ print(inference_model.summary())
 
 
 inference_model.load_weights('cocktail_weights.h5')
-for i in range(0, 20):
+recipes = []
+for i in range(0, 100):
     inference_model.reset_states()
 
     startChar = np.zeros((1, 1, len(char2id)))
@@ -68,3 +69,6 @@ for i in range(0, 20):
         startChar.fill(0)
         startChar[0, 0, nextCharId] = 1
     print(sent)
+    recipes.append(sent)
+
+pickle.dump(recipes, open('generated_recipes.p', 'wb'))

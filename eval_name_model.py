@@ -8,6 +8,7 @@ from keras.layers.wrappers import TimeDistributed
 import pickle
 
 from load_dataset import name_training_set_generator
+from load_dataset import eval_name_generator
 from load_dataset import num_recipes
 from load_dataset import max_recipe_length
 from load_dataset import max_name_length
@@ -53,7 +54,7 @@ print(inference_model.summary())
 
 inference_model.load_weights('cocktail_name_weights.h5')
 num_samples = 3
-gen = name_training_set_generator(num_samples)
+gen = eval_name_generator()
 
 def printEmbedding(recipe):
     charIds = np.zeros(recipe.shape[0])
@@ -61,24 +62,22 @@ def printEmbedding(recipe):
         charIds[idx] = np.nonzero(elem)[0].squeeze()
     print(''.join([id2char[x] for x in charIds if id2char[x] != 'S' and id2char[x] != 'E']))
 
-inputs, realName = next(gen)
-inputs, realName = next(gen)
+inputs = next(gen)
 for i in range(1, num_samples):
     title_node.reset_states()
     recipe_node.reset_states()
     inference_model.reset_states()
 
     print("Real recipe:")
-    printEmbedding(inputs[0][i])
-    print("Real title:")
-    printEmbedding(inputs[1][i])
-    print("Generated titled:")
+    printEmbedding(inputs[i])
+    
+    print("Generated title:")
 
     startChar = np.zeros((1, 1, len(char2id)))
     startChar[0, 0, char2id['S']] = 1
     sent = ""
     for j in range(0, max_name_sequence_length):
-        nextCharProbs = inference_model.predict([np.reshape(inputs[0][i], (1, max_sequence_length, len(char2id))), startChar])
+        nextCharProbs = inference_model.predict([np.reshape(inputs[i], (1, max_sequence_length, len(char2id))), startChar])
 
         nextCharProbs = np.asarray(nextCharProbs).astype('float64')
         nextCharProbs = nextCharProbs / nextCharProbs.sum()
